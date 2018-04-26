@@ -6,17 +6,19 @@ from flask import request, render_template
 
 from cocoapp import app
 
+from cocoapp.model2 import *
+
 valid_mimetypes = ['image/jpeg', 'image/png']
 
 
-def get_predictions(img_name):
-    #TODO
-    return {
-        "bboxes":
-        [
-            {"x1": 10, "x2": 50, "y1": 10, "y2": 50}
-        ],
-    }
+# def get_predictions(img_name):
+#     #TODO
+#     return {
+#         "bboxes":
+#         [
+#             {"x1": 10, "x2": 50, "y1": 10, "y2": 50}
+#         ],
+#     }
 
 
 @app.route('/')
@@ -50,8 +52,9 @@ def predict():
         # Write image to static directory
         img_file.save(os.path.join(app.config['UPLOAD_FOLDER'], img_name))
 
+        img = open_image(os.path.join(app.config['UPLOAD_FOLDER'], img_name))
         # Run Prediction on the model
-        results = get_predictions(img_name)
+        results = get_predictions(img)
 
         # Delete image when done with analysis
         os.remove(os.path.join(app.config['UPLOAD_FOLDER'], img_name))
