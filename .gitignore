@@ -6,6 +6,8 @@ __pycache__/
 # C extensions
 *.so
 
+static/tmp-img/*
+
 # Distribution / packaging
 .Python
 env/

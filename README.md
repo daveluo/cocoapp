@@ -1,1 +1,3 @@
-# cocoapp
+# Coco App
+
+Coco App description

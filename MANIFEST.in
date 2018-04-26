@@ -1,0 +1,2 @@
+recursive-include cocoapp/templates *
+recursive-include cocoapp/static *
