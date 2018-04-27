@@ -2,6 +2,14 @@
     text-align:center;
 }
 
+#bbox-container {
+    background-color: #E0E0E0;
+}
+
+#bbox-slider .slider-selection {
+    background: #BABABA;
+}
+
 form {
     padding:20px 0px;
     text-align:center;
@@ -36,7 +44,7 @@ input[type="submit"] {
 .result {
     display:block;
     font-size:30px;
-    font-weight:700;   
+    font-weight:700;
 }
 
 .eval {
