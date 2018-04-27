@@ -23,7 +23,9 @@ $(document).ready(function() {
                 y1 = parseInt(d.y1 * height);
                 x2 = parseInt(d.x2 * width);
                 y2 = parseInt(d.y2 * height);
-                ctx.rect(x1, y1, x2, y2);
+                b_w = x2-x1
+                b_h = y2-y1
+                ctx.rect(x1, y1, b_w, b_h);
                 ctx.lineWidth = 3;
                 ctx.strokeStyle = 'white';
                 ctx.stroke();
