@@ -272,50 +272,6 @@ class Scale(CoordTransform):
     def do_transform(self, x, is_y):
         if is_y: return scale_min(x, self.sz_y, cv2.INTER_NEAREST)
         else   : return scale_min(x, self.sz,   cv2.INTER_AREA   )
-
-class RandomCrop(CoordTransform):
-    """ A class that represents a Random Crop transformation.
-
-    This transforms (optionally) transforms x,y at with the same parameters.
-    Arguments
-    ---------
-        targ: int
-            target size of the crop.
-        tfm_y: TfmType
-            type of y transformation.
-    """
-    def __init__(self, targ_sz, tfm_y=TfmType.NO, sz_y=None):
-        super().__init__(tfm_y)
-        self.targ_sz,self.sz_y = targ_sz,sz_y
-
-    def set_state(self):
-        self.store.rand_r = random.uniform(0, 1)
-        self.store.rand_c = random.uniform(0, 1)
-
-    def do_transform(self, x, is_y):
-        r,c,*_ = x.shape
-        sz = self.sz_y if is_y else self.targ_sz
-        start_r = np.floor(self.store.rand_r*(r-sz)).astype(int)
-        start_c = np.floor(self.store.rand_c*(c-sz)).astype(int)
-        return crop(x, start_r, start_c, sz)
-
-class CenterCrop(CoordTransform):
-    """ A class that represents a Center Crop.
-
-    This transforms (optionally) transforms x,y at with the same parameters.
-    Arguments
-    ---------
-        sz: int
-            size of the crop.
-        tfm_y : TfmType
-            type of y transformation.
-    """
-    def __init__(self, sz, tfm_y=TfmType.NO, sz_y=None):
-        super().__init__(tfm_y)
-        self.min_sz,self.sz_y = sz,sz_y
-
-    def do_transform(self, x, is_y):
-        return center_crop(x, self.sz_y if is_y else self.min_sz)
     
 class NoCrop(CoordTransform):
     """  A transformation that resize to a square image without cropping.
@@ -389,11 +345,7 @@ def image_gen(normalizer, denorm, sz, tfms=None, max_zoom=None, pad=0, crop_type
     return Transforms(sz, tfms, normalizer, denorm, crop_type,
                       tfm_y=tfm_y, sz_y=sz_y)
 
-pad = 0
-val_crop = CropType.RANDOM
-tfm_y = None
-sz_y = None
-crop_fn_lu = {CropType.RANDOM: RandomCrop, CropType.CENTER: CenterCrop, CropType.NO: NoCrop}
+crop_fn_lu = {CropType.NO: NoCrop}
 
 def compose(im, y, fns):
     """ apply a collection of transformation functions fns to images
@@ -427,6 +379,13 @@ def crop(im, r, c, sz):
     '''
     return im[r:r+sz, c:c+sz]
 
+def no_crop(im, min_sz=None, interpolation=cv2.INTER_AREA):
+    """ Returns a squared resized image """
+    r,c,*_ = im.shape
+    if min_sz is None: min_sz = min(r,c)
+    return cv2.resize(im, (min_sz, min_sz), interpolation=interpolation)
+
+
 # -------- end val_tfms stuff
 
 # def preproc_img(img):
@@ -444,7 +403,7 @@ def crop(im, r, c, sz):
 #     return img_tensor
 
 def preproc_img(img):
-    val_tfm = image_gen(tfm_norm, tfm_denorm, sz, pad=pad, crop_type=val_crop, tfm_y=tfm_y, sz_y=sz_y)
+    val_tfm = image_gen(tfm_norm, tfm_denorm, sz, pad=0, crop_type=CropType.NO, tfm_y=None, sz_y=None)
     trans_img = val_tfm(img)
     return Variable(torch.FloatTensor(trans_img)).unsqueeze_(0)
 
@@ -496,7 +455,78 @@ def pred2dict(bb_np,score,cat_str):
             "score": score,
             "category": cat_str}
 
-def get_predictions(img):
+# non max suppression
+def nms(boxes, scores, overlap=0.5, top_k=100):
+    keep = scores.new(scores.size(0)).zero_().long()
+    if boxes.numel() == 0: return keep
+    x1 = boxes[:, 0]
+    y1 = boxes[:, 1]
+    x2 = boxes[:, 2]
+    y2 = boxes[:, 3]
+    area = torch.mul(x2 - x1, y2 - y1)
+    v, idx = scores.sort(0)  # sort in ascending order
+    idx = idx[-top_k:]  # indices of the top-k largest vals
+    xx1 = boxes.new()
+    yy1 = boxes.new()
+    xx2 = boxes.new()
+    yy2 = boxes.new()
+    w = boxes.new()
+    h = boxes.new()
+
+    count = 0
+    while idx.numel() > 0:
+        i = idx[-1]  # index of current largest val
+        keep[count] = i
+        count += 1
+        if idx.size(0) == 1: break
+        idx = idx[:-1]  # remove kept element from view
+        # load bboxes of next highest vals
+        torch.index_select(x1, 0, idx, out=xx1)
+        torch.index_select(y1, 0, idx, out=yy1)
+        torch.index_select(x2, 0, idx, out=xx2)
+        torch.index_select(y2, 0, idx, out=yy2)
+        # store element-wise max with next highest score
+        xx1 = torch.clamp(xx1, min=x1[i])
+        yy1 = torch.clamp(yy1, min=y1[i])
+        xx2 = torch.clamp(xx2, max=x2[i])
+        yy2 = torch.clamp(yy2, max=y2[i])
+        w.resize_as_(xx2)
+        h.resize_as_(yy2)
+        w = xx2 - xx1
+        h = yy2 - yy1
+        # check sizes of xx1 and xx2.. after each iteration
+        w = torch.clamp(w, min=0.0)
+        h = torch.clamp(h, min=0.0)
+        inter = w*h
+        # IoU = i / (area(a) + area(b) - i)
+        rem_areas = torch.index_select(area, 0, idx)  # load remaining areas)
+        union = (rem_areas - inter) + area[i]
+        IoU = inter/union  # store result in iou
+        # keep only elements with an IoU <= overlap
+        idx = idx[IoU.le(overlap)]
+    return keep, count
+
+def nms_preds(a_ic, p_cl, cl):
+    nms_bb, nms_pr, nms_id = [],[],[]
+    
+    conf_scores = p_cl.sigmoid()[0].t().data
+    boxes = a_ic.view(-1, 4)
+    scores = conf_scores[cl]
+    
+    if len(scores)>0:
+        ids, count = nms(boxes.data, scores, 0.4, 50)
+        ids = ids[:count]
+
+        nms_pr.append(scores[ids])
+        nms_bb.append(boxes.data[ids])
+        nms_id.append([cl]*count)
+
+    else: nms_bb, nms_pr, nms_id = [[-1.,-1.,-1.,-1.,]],[[-1]],[[-1]]
+    
+    # return in order of a_ic, clas id, clas_pr
+    return Variable(torch.FloatTensor(nms_bb[0])), Variable(torch.FloatTensor(nms_pr[0])), np.asarray(nms_id[0])
+
+def get_predictions(img, nms=True):
     img_t = preproc_img(img)
 
     #load model
@@ -511,6 +541,10 @@ def get_predictions(img):
     clas_pr, clas_ids = p_cl[0].max(1)
     clas_pr = clas_pr.sigmoid()
     clas_ids = to_np(clas_ids)
+
+    #non max suppression (optional)
+    #cl = 1 hardcoded for now, bug with cl=0 to be fixed
+    if nms: a_ic, clas_pr, clas_ids = nms_preds(a_ic, p_cl, 1)
 
     preds = []
     for i,a in enumerate(a_ic):

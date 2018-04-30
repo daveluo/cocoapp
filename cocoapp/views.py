@@ -54,7 +54,7 @@ def predict():
 
         img = open_image(os.path.join(app.config['UPLOAD_FOLDER'], img_name))
         # Run Prediction on the model
-        results = get_predictions(img)
+        results = get_predictions(img, False)
 
         # Delete image when done with analysis
         os.remove(os.path.join(app.config['UPLOAD_FOLDER'], img_name))
