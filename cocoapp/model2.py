@@ -2,7 +2,8 @@ from pathlib import Path
 import json, pdb
 import os, numpy as np, math, collections, threading, json, random, cv2
 import pickle, sys, itertools, string, sys, re, datetime, time, shutil, copy
-
+from urllib.request import urlopen
+from tempfile import NamedTemporaryFile
 import torch
 # import torchvision
 # from torchvision import transforms
@@ -10,6 +11,9 @@ import torch
 from torch import nn, cuda, backends, FloatTensor, LongTensor, optim
 from torch.autograd import Variable
 import torch.nn.functional as F
+from torch.utils.model_zoo import load_url
+
+# from cocoapp import app
 
 cats = {
     1: 'ground',
@@ -406,9 +410,6 @@ def preproc_img(img):
     trans_img = val_tfm(img)
     return Variable(torch.FloatTensor(trans_img)).unsqueeze_(0)
 
-def load_model(path):
-    learn = torch.load(path)
-    return learn
 
 def gen_anchors(anc_grids, anc_zooms, anc_ratios):
     anchor_scales = [(anz*i,anz*j) for anz in anc_zooms for (i,j) in anc_ratios]
@@ -528,9 +529,17 @@ def nms_preds(a_ic, p_cl, cl):
 def get_predictions(img, nms=True):
     img_t = preproc_img(img)
 
-    #load model
-    m_path = 'cocomodel_01.pt'
-    model = load_model(m_path)
+    # dst = "cocomodel.pt"
+    # m_path = 'https://www.dropbox.com/s/3k4hvub89e4nxuh/cocomodel-01.pt?dl=1'
+    # with urlopen(m_path) as u, NamedTemporaryFile(delete=False) as f:
+    #     f.write(u.read())
+    #     shutil.move(f.name, dst)
+
+    # model = torch.load(dst)
+    # with urlopen(m_path) as f:
+    #     model = torch.load(f)
+    # model = load_model("cocomodel_01.pt")
+    model  = load_model()
 
     #make predictions
     p_cl, p_bb = model(img_t)
@@ -555,3 +564,13 @@ def get_predictions(img, nms=True):
     return {
         "bboxes": preds     
         }
+
+def load_model():
+    dst = "cocomodel.pt"
+    m_path = 'https://www.dropbox.com/s/3k4hvub89e4nxuh/cocomodel-01.pt?dl=1'
+    with urlopen(m_path) as u, NamedTemporaryFile(delete=False) as f:
+        f.write(u.read())
+        shutil.move(f.name, dst)
+
+    model = torch.load(dst)
+    return model
