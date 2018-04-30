@@ -1,12 +1,11 @@
 from pathlib import Path
 import json, pdb
-import PIL, os, numpy as np, math, collections, threading, json, random, scipy, cv2
-import pandas as pd, pickle, sys, itertools, string, sys, re, datetime, time, shutil, copy
-import matplotlib.pyplot as plt
+import os, numpy as np, math, collections, threading, json, random, cv2
+import pickle, sys, itertools, string, sys, re, datetime, time, shutil, copy
 
 import torch
-import torchvision
-from torchvision import transforms
+# import torchvision
+# from torchvision import transforms
 
 from torch import nn, cuda, backends, FloatTensor, LongTensor, optim
 from torch.autograd import Variable

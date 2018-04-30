@@ -1,6 +1,3 @@
-import matplotlib
-matplotlib.use('Agg')
-
 from flask import Flask
 
 app = Flask(__name__)
