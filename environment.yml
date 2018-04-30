@@ -4,7 +4,6 @@ channels:
   - defaults
 dependencies:
   - python>=3.6
-  - conda
   - pip
   - cython>=0.28
   - pyyaml
