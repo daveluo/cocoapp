@@ -8,7 +8,7 @@ itsdangerous==0.24
 Jinja2==2.10
 MarkupSafe==1.0
 mkl-fft>=1.0.0
-mkl-random>=1.0.1
+mkl-random>=1.0
 numpy==1.14.2
 olefile==0.45.1
 opencv-python==3.4.0.12
