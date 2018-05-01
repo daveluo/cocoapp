@@ -566,11 +566,13 @@ def get_predictions(img, nms=True):
         }
 
 def load_model():
-    dst = "cocomodel.pt"
-    m_path = 'https://www.dropbox.com/s/3k4hvub89e4nxuh/cocomodel-01.pt?dl=1'
-    with urlopen(m_path) as u, NamedTemporaryFile(delete=False) as f:
-        f.write(u.read())
-        shutil.move(f.name, dst)
+    dst = "cocomodel-01.pt"
+    if os.path.isfile(dst): model = torch.load(dst)
+    else:
+        m_path = 'https://www.dropbox.com/s/3k4hvub89e4nxuh/cocomodel-01.pt?dl=1'
+        with urlopen(m_path) as u, NamedTemporaryFile(delete=False) as f:
+            f.write(u.read())
+            shutil.move(f.name, dst)
 
-    model = torch.load(dst)
+        model = torch.load(dst)
     return model
