@@ -4,3 +4,4 @@ app = Flask(__name__)
 app.config.from_object('cocoapp.default_settings')
 
 import cocoapp.views
+# from model2 import *

@@ -5,8 +5,8 @@ from flask import jsonify
 from flask import request, render_template
 
 from cocoapp import app
-
 from cocoapp.model2 import *
+from cocoapp.cocomodel import *
 
 valid_mimetypes = ['image/jpeg', 'image/png']
 
