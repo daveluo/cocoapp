@@ -1,3 +1,7 @@
+.active {
+    border: 5px solid red;
+}
+
 .head-wrap {
     text-align:center;
 }
