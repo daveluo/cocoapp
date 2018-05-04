@@ -65,7 +65,7 @@ $(document).ready(function() {
         }
     });
 
-    $('form').submit(function(event) {
+    $('#predict').submit(function(event) {
         event.preventDefault();
 
         if ($('#img')[0].files.length === 0) {
