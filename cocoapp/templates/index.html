@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html lang="en">
     <head>
-        <title>CoCo App</title>
+        <title>Coco App</title>
         <meta charset="utf-8">
         <meta http-equiv="x-ua-compatible" content="ie=edge">
         <meta name="description" content="">
@@ -16,24 +16,42 @@
     <body>
         <header>
             <div class="head-wrap">
-                <h1>Coco App</h1>
+                <h1>CocoNet</h1>
             </div>
         </header>
+
         <div class="container">
+            <div class="col-sm-12">
+                <h3>Select sample image:</h3>
+                <br>
+                <div class="row">
+                    {% for img_src in samples %}
+                    <div class="col-sm-3">
+                        <p><img class="sample_img" src="{{img_src[8:]}}" height="150" width="150"/></p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <h3>Or upload image:</h3>
             <form id="predict" method="post" enctype="multipart/form-data" action="upload">
                 <input class="btn btn-warning" id="img" name="file" type="file" accept=".jpeg,.jpg,.png"/>
-                <input class="btn btn-danger" type="submit" value="Go Nuts!"/>
+                <input class="btn btn-danger" type="submit" value="Coconuts!"/>
             </form>
+            <h5>Slide to adjust prediction visibility:</h5>
             <div class="bbox-container">
-                <input id="bbox-slider" data-slider-id='bbox-slider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="14"/>
+                <span class="slider">see all</span><input id="bbox-slider" data-slider-id='bbox-slider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="40"/><span class="slider">see highest confidence </span>
             </div>
+
             <hr />
             <div class="row">
-                <div class="col-sm-5 pull-left">
+                <div class="col-sm pull-left">
                     <div class="img-hidden" style="display:none"></div>
                     <canvas id="img-canvas" width="500" height="500" >
                 </div>
-                <div class="col-sm-6 pull-right">
+                <div class="col-sm pull-right">
                     <div class="status-area">
                         <span class="status"></span>
                     </div>

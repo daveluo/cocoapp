@@ -26,15 +26,17 @@ def index():
     # app.logger.warning('sample message')
     # # Sort files by upload date
     # recent_files = sorted(
-    #     glob.glob("%s/*" % app.config['UPLOAD_FOLDER']),
+    #     glob.glob("%s/*" % app.config['SAMPLE_FOLDER']),
     #     key=os.path.getctime, reverse=True
     # )
-    # # Pick the most recent two or less for the index view
-    # slice_index = 2 if len(recent_files) > 1 else len(recent_files)
-    # recents = recent_files[:slice_index]
-    # return render_template('index.html', recents=recents)
+    samples = glob.glob("%s/*" % app.config['SAMPLE_FOLDER'])
+    # Pick the most recent two or less for the index view
+    #slice_index = 2 if len(sample_files) > 1 else len(sample_files)
+    #recents = sample_files[:slice_index]
+    # app.logger.warning(samples[0][8:])
+    return render_template('index.html', samples=samples)
 
-    return render_template('index.html')
+    # return render_template('index.html')
 
 
 @app.route('/predict', methods=['POST'])

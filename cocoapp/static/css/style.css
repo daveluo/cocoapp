@@ -1,3 +1,8 @@
+.active {
+    outline: 5px solid #33CC00;
+    outline-offset:-5px;
+}
+
 .head-wrap {
     text-align:center;
 }
@@ -8,6 +13,12 @@
 
 #bbox-slider .slider-selection {
     background: #BABABA;
+}
+
+.slider {
+    padding: 5px;
+    font-size:10px;
+    font-weight:400;
 }
 
 form {
@@ -43,7 +54,7 @@ input[type="submit"] {
 
 .result {
     display:block;
-    font-size:30px;
+    font-size:20px;
     font-weight:700;
 }
 
